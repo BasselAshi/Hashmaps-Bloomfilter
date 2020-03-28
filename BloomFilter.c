@@ -1,5 +1,4 @@
-#include "Bloo
-newBFer.h"
+#include "BloomFilter.h"
 
 /// @brief Allocate and initialize a new BloomFilter.
 ///
@@ -20,28 +19,34 @@ newBFer.h"
 ///        (3) All the bits should be 0 at the start.
 BloomFilter *newBloomFilter(int num_bits, int num_hash, HashFunc *funcs)
 {
-  BloomFilter *newBF = calloc(sizeof(BloomFilter), 1);
+	BloomFilter *newBF = calloc(sizeof(BloomFilter), 1);
 
-  // Stimulating a ceil function
-  int allocatedBytes = num_bits / 8;
-  if (num_bits % 8 != 0)
-  {
-    allocatedBytes++;
-  }
-  unsigned char *newData = calloc(sizeof(byte), allocatedBytes);
+	// Simulating a ceil function
+	int allocatedBytes = (num_bits + 7) / 8;
+	unsigned char *newData = calloc(sizeof(char), allocatedBytes);
 
-  HashFunc *newFN = calloc(sizeof(HashFunc *), num_hash);
+	HashFunc *newFN = calloc(sizeof(HashFunc *), num_hash);
 
-  if (newBF == NULL || newData == NULL || newFN == NULL) {
-    fprintf("Error allocating memory\n");
-    exit(3);
-  }
+	if (newBF == NULL || newData == NULL || newFN == NULL)
+	{
+		fprintf(stderr, "Error allocating memory\n");
+		exit(3);
+	}
 
-  newBF->num_bits = num_bits;
-  newBF->num_hash = num_hash;
-  newBF->funcs = newFN;
+	// Populate hash functions pointer
+	int i = 0;
+	while (i < num_hash)
+	{
+		newFN[i] = funcs[i];
+		i++;
+	}
 
-  return newBF;
+	newBF->num_bits = num_bits;
+	newBF->num_hash = num_hash;
+	newBF->data = newData;
+	newBF->funcs = newFN;
+
+	return newBF;
 }
 
 /// @brief Add a string to the BloomFilter
@@ -57,7 +62,16 @@ BloomFilter *newBloomFilter(int num_bits, int num_hash, HashFunc *funcs)
 ///               index = hash(str) % num_bits
 void BloomFilter_Add(BloomFilter *bf, const char *str)
 {
-  return;
+	HashFunc *functions = bf->funcs;
+
+	int i = 0;
+	while (i < bf->num_hash)
+	{
+		int index = functions[i](str) % bf->num_bits;
+		SETBIT(bf->data, index);
+		i++;
+	}
+	return;
 }
 
 /// @brief Check if the BloomFilter thinks the string is in it or not.
@@ -74,5 +88,17 @@ void BloomFilter_Add(BloomFilter *bf, const char *str)
 ///               index = hash(str) % num_bits
 int BloomFilter_Check(BloomFilter *bf, const char *str)
 {
-  return 0;
+	HashFunc *functions = bf->funcs;
+
+	int i = 0;
+	while (i < bf->num_hash)
+	{
+		int index = functions[i](str) % bf->num_bits;
+		if (GETBIT(bf->data, index) == 0)
+		{
+			return 0;
+		}
+		i++;
+	}
+	return 1;
 }

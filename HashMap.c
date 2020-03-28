@@ -252,7 +252,7 @@ void HashMap_Free(HashMap *hm)
 		}
 		i++;
 	}
-
+	free(hm->buckets);
 	free(hm);
 
 	return;
