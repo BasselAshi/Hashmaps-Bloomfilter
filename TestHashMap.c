@@ -14,12 +14,16 @@
 #include "HashMap.h"
 
 /// @brief Prints out the hashmap to hel debug
-void printHashMap(HashMap *hm) {
+void printHashMap(HashMap *hm)
+{
   printf("--- HashMap Contents ---\n");
-  for (int i = 0; i < hm->num_buckets; i++) {
+  for (int i = 0; i < hm->num_buckets; i++)
+  {
     printf("* Bucket #%d: \n", i);
-    if (hm->buckets[i] == NULL) printf("    - NULL\n");
-    for (BucketNode *cur = hm->buckets[i]; cur != NULL; cur = cur->next) {
+    if (hm->buckets[i] == NULL)
+      printf("    - NULL\n");
+    for (BucketNode *cur = hm->buckets[i]; cur != NULL; cur = cur->next)
+    {
       printf("    - KEY: '%s', VALUE: '%s'\n", cur->key, cur->value);
     }
   }
@@ -32,38 +36,50 @@ void printHashMap(HashMap *hm) {
 /// @param value  Expected Value
 /// @param nextNull  Boolean indicating if `next` should be NULL
 int checkNode(BucketNode *bn, const char *key, const char *value,
-              int nextNull) {
-  if (bn == NULL) return 0;
-  if (strcmp(bn->key, key) != 0) return 0;
-  if (strcmp(bn->value, value) != 0) return 0;
-  if (!!bn->next == nextNull) return 0;
+              int nextNull)
+{
+  if (bn == NULL)
+    return 0;
+  if (strcmp(bn->key, key) != 0)
+    return 0;
+  if (strcmp(bn->value, value) != 0)
+    return 0;
+  if (!!bn->next == nextNull)
+    return 0;
   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// @brief Tests the functionality of newHashMap()
-void testhm_00() {
+void testhm_00()
+{
   HashMap *hm = newHashMap(5, hash_sdbm);
   assert(hm);
   assert(hm->buckets);
   assert(hm->func == hash_sdbm);
   assert(hm->num_buckets == 5);
-  for (int i = 0; i < 5; i++) assert(hm->buckets[i] == NULL);
-  HashMap_Free(hm);  // Use valgrind to make sure this works
+  for (int i = 0; i < 5; i++)
+    assert(hm->buckets[i] == NULL);
+  HashMap_Free(hm); // Use valgrind to make sure this works
 }
 
 /// @brief Tests the Basic functionality of HashMap_Add()
-void testhm_01() {
+void testhm_01()
+{
   HashMap *hm = newHashMap(7, hash_xor);
   hm = HashMap_Add(hm, "CSC", "B63");
-  for (int i = 0; i < 4; i++) assert(hm->buckets[i] == NULL);
-  for (int i = 5; i < 7; i++) assert(hm->buckets[i] == NULL);
+  for (int i = 0; i < 4; i++)
+    assert(hm->buckets[i] == NULL);
+  for (int i = 5; i < 7; i++)
+    assert(hm->buckets[i] == NULL);
   assert(checkNode(hm->buckets[4], "CSC", "B63", 1));
 
   hm = HashMap_Add(hm, "Data", "Structures");
-  for (int i = 0; i < 4; i++) assert(hm->buckets[i] == NULL);
-  for (int i = 5; i < 7; i++) assert(hm->buckets[i] == NULL);
+  for (int i = 0; i < 4; i++)
+    assert(hm->buckets[i] == NULL);
+  for (int i = 5; i < 7; i++)
+    assert(hm->buckets[i] == NULL);
   assert(checkNode(hm->buckets[4], "Data", "Structures", 0));
   assert(checkNode(hm->buckets[4]->next, "CSC", "B63", 1));
 
@@ -74,17 +90,18 @@ void testhm_01() {
   hm = HashMap_Add(hm, "test", "case");
   assert(checkNode(hm->buckets[2], "test", "case", 1));
 
-  HashMap_Free(hm);  // Use valgrind to make sure this works
+  HashMap_Free(hm); // Use valgrind to make sure this works
 }
 
 /// @brief Tests the dynamic expansion in HashMap_Add()
-void testhm_02() {
+void testhm_02()
+{
   HashMap *hm = newHashMap(2, hash_xor);
 
   hm = HashMap_Add(hm, "CSC", "B63");
   assert(checkNode(hm->buckets[0], "CSC", "B63", 1));
 
-  hm = HashMap_Add(hm, "Data", "Structures");  // Expand!
+  hm = HashMap_Add(hm, "Data", "Structures"); // Expand!
   assert(hm->num_buckets == 4);
   assert(checkNode(hm->buckets[0], "CSC", "B63", 1));
   assert(checkNode(hm->buckets[3], "Data", "Structures", 1));
@@ -94,7 +111,7 @@ void testhm_02() {
   assert(checkNode(hm->buckets[1], "test", "case", 1));
   assert(checkNode(hm->buckets[3], "Data", "Structures", 1));
 
-  hm = HashMap_Add(hm, "foo", "bar");  // Expand
+  hm = HashMap_Add(hm, "foo", "bar"); // Expand
   assert(hm->num_buckets == 8);
   assert(checkNode(hm->buckets[1], "test", "case", 0));
   assert(checkNode(hm->buckets[1]->next, "foo", "bar", 1));
@@ -108,11 +125,12 @@ void testhm_02() {
   assert(checkNode(hm->buckets[7], "PHP", "Sucks", 0));
   assert(checkNode(hm->buckets[7]->next, "Data", "Structures", 1));
 
-  HashMap_Free(hm);  // Use valgrind to make sure this works
+  HashMap_Free(hm); // Use valgrind to make sure this works
 }
 
 /// @brief Tests the functionality of HashMap_Find()
-void testhm_03() {
+void testhm_03()
+{
   HashMap *hm = newHashMap(13, hash_xor);
   hm = HashMap_Add(hm, "CSC", "B63");
   hm = HashMap_Add(hm, "Data", "Structures");
@@ -123,11 +141,12 @@ void testhm_03() {
   assert(strcmp(HashMap_Find(hm, "Data"), "Destroyed") == 0);
   assert(HashMap_Find(hm, "Algorithms") == NULL);
 
-  HashMap_Free(hm);  // Use valgrind to make sure this works
+  HashMap_Free(hm); // Use valgrind to make sure this works
 }
 
 /// @brief Tests basic functionality of in HashMap_Delete()
-void testhm_04() {
+void testhm_04()
+{
   HashMap *hm = newHashMap(11, hash_first_letter);
 
   // All these will have the same hash
@@ -147,11 +166,12 @@ void testhm_04() {
   assert(checkNode(hm->buckets[9]->next, "Key3", "Value3", 0));
   assert(checkNode(hm->buckets[9]->next->next, "Key1", "Value1", 1));
 
-  HashMap_Free(hm);  // Use valgrind to make sure this works
+  HashMap_Free(hm); // Use valgrind to make sure this works
 }
 
 /// @brief Tests Dynamic shrinking in HashMap_Delete()
-void testhm_05() {
+void testhm_05()
+{
   // Start of with an array much bigger than needed.
   // Make sure you're NOT shrinking inside HashMap_Add().
   HashMap *hm = newHashMap(17, hash_jenkins_otat);
@@ -162,17 +182,17 @@ void testhm_05() {
   hm = HashMap_Add(hm, "Key3", "Value3");
   hm = HashMap_Add(hm, "Key4", "Value4");
   hm = HashMap_Add(hm, "Key5", "Value5");
-  assert(hm->num_buckets == 17);  // Should be unchanged
+  assert(hm->num_buckets == 17); // Should be unchanged
 
   hm = HashMap_Delete(hm, "Key5");
-  hm = HashMap_Delete(hm, "Key2");  // Shrink
-  assert(hm->num_buckets == 8);     // floor(17 / 2) = 8
+  hm = HashMap_Delete(hm, "Key2"); // Shrink
+  assert(hm->num_buckets == 8);    // floor(17 / 2) = 8
 
   assert(checkNode(hm->buckets[3], "Key1", "Value1", 1));
   assert(checkNode(hm->buckets[4], "Key4", "Value4", 1));
   assert(checkNode(hm->buckets[6], "Key3", "Value3", 1));
 
-  HashMap_Free(hm);  // Use valgrind to make sure this works
+  HashMap_Free(hm); // Use valgrind to make sure this works
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,20 +201,26 @@ int NUM_TESTS = 6;
 void (*TESTS[])() = {testhm_00, testhm_01, testhm_02,
                      testhm_03, testhm_04, testhm_05};
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   int test_num;
-  if (argc > 1) {
+  if (argc > 1)
+  {
     test_num = atoi(argv[1]);
-    if (test_num >= 0 && test_num < NUM_TESTS) {
-      TESTS[test_num]();  // Run the test
+    if (test_num >= 0 && test_num < NUM_TESTS)
+    {
+      TESTS[test_num](); // Run the test
       printf("Test %d passed!\n", test_num);
       return 0;
-    } else {
+    }
+    else
+    {
       printf("Invalid test number entered. Running all tests...\n");
     }
   }
 
-  for (test_num = 0; test_num < NUM_TESTS; test_num++) {
+  for (test_num = 0; test_num < NUM_TESTS; test_num++)
+  {
     TESTS[test_num]();
     printf("Test %d passed!\n", test_num);
   }

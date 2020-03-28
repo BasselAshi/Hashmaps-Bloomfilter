@@ -31,7 +31,7 @@
 HashMap *newHashMap(int num_buckets, HashFunc func)
 {
 	HashMap *newHM = calloc(sizeof(HashMap), 1);
-	BucketNode *newBN = calloc(sizeof(BucketNode), num_buckets);
+	BucketNode **newBN = calloc(sizeof(BucketNode *), num_buckets);
 
 	if (newHM == NULL || newBN == NULL)
 	{
@@ -41,7 +41,7 @@ HashMap *newHashMap(int num_buckets, HashFunc func)
 
 	newHM->num_buckets = num_buckets;
 	newHM->num_elems = 0;
-	newHM->buckets = &newBN;
+	newHM->buckets = newBN;
 	newHM->func = func;
 
 	return newHM;
@@ -122,7 +122,7 @@ HashMap *HashMap_Add(HashMap *hm, const char *key, const char *value)
 	}
 
 	// It means key doesn't exist
-	if (tr != NULL)
+	if (tr == NULL)
 	{
 		BucketNode *newBN = calloc(sizeof(BucketNode), 1);
 		strcpy(newBN->key, key);
@@ -130,6 +130,7 @@ HashMap *HashMap_Add(HashMap *hm, const char *key, const char *value)
 		newBN->next = bucket[index];
 		bucket[index] = newBN;
 		hm->num_elems = hm->num_elems + 1;
+		// printf("--- Added %s:%s in %d\n", value, key, index);
 	}
 
 	// HashMap resize is required
@@ -162,6 +163,7 @@ char *HashMap_Find(HashMap *hm, const char *key)
 		{
 			return tr->value;
 		}
+		tr = tr->next;
 	}
 	return NULL;
 }
@@ -184,6 +186,45 @@ char *HashMap_Find(HashMap *hm, const char *key)
 ///             need to re-hash all the elements.
 HashMap *HashMap_Delete(HashMap *hm, const char *key)
 {
+	int index = hm->func(key) % hm->num_buckets;
+	BucketNode **bucket = hm->buckets;
+
+	BucketNode *tr = bucket[index];
+	BucketNode *prev = NULL;
+	while (tr != NULL)
+	{
+		if (strcmp(tr->key, key) == 0)
+		{
+			if (prev != NULL)
+			{
+				prev->next = tr->next;
+			}
+			else
+			{
+				bucket[index] = tr->next;
+			}
+
+			free(tr);
+			hm->num_elems = hm->num_elems - 1;
+			break;
+		}
+		prev = tr;
+		tr = tr->next;
+	}
+
+	// BucketNode *temp = bucket[index];
+	// while (temp != NULL)
+	// {
+	// 	printf("[%p]: %s: %s\t\t%p\n", temp, temp->key, temp->value, temp->next);
+	// 	temp = temp->next;
+	// }
+
+	// HashMap resize is required
+	if (hm->num_elems < (hm->num_buckets / 4))
+	{
+		return HashMap_Resize(hm, hm->num_buckets / 2);
+	}
+
 	return hm;
 }
 
@@ -195,7 +236,24 @@ HashMap *HashMap_Delete(HashMap *hm, const char *key)
 ///        check the functionality.
 void HashMap_Free(HashMap *hm)
 {
-	free(*(hm->buckets));
+	int size = hm->num_buckets;
+
+	int i = 0;
+	while (i < size)
+	{
+		BucketNode *tr = hm->buckets[i];
+		BucketNode *next = NULL;
+		while (tr != NULL)
+		{
+			next = tr->next;
+			// printf("[%d]: Freeing %s: %s\n", i, tr->key, tr->value);
+			free(tr);
+			tr = next;
+		}
+		i++;
+	}
+
 	free(hm);
+
 	return;
 }
